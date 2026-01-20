@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./uidai_analytics
+    image: uidai-backend:dev
+    container_name: uidai_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./uidai_analytics/.env
+    volumes:
+      - ./uidai_analytics:/app
+    command: gunicorn --bind 0.0.0.0:8000 uidai_analytics.wsgi:application
+    networks:
+      - uidai_network
+    depends_on:
+      - redis
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
+
+  redis:
+    image: redis:7-alpine
+    container_name: uidai_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --bind 0.0.0.0
+    volumes:
+      - redis_data:/data
+    networks:
+      - uidai_network
+
+  celery_worker:
+    build: ./uidai_analytics
+    image: uidai-backend:dev
+    container_name: uidai_celery_worker
+    env_file:
+      - ./uidai_analytics/.env
+    volumes:
+      - ./uidai_analytics:/app
+    command: celery -A uidai_analytics worker -l info
+    networks:
+      - uidai_network
+    depends_on:
+      - backend
+      - redis
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+  celery_beat:
+    build: ./uidai_analytics
+    image: uidai-backend:dev
+    container_name: uidai_celery_beat
+    env_file:
+      - ./uidai_analytics/.env
+    volumes:
+      - ./uidai_analytics:/app
+    command: celery -A uidai_analytics beat -l info
+    networks:
+      - uidai_network
+    depends_on:
+      - backend
+      - redis
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+  frontend:
+    build: ./uidai-dashboard
+    image: uidai-frontend:dev
+    container_name: uidai_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - INTERNAL_API_URL=http://backend:8000/api
+    volumes:
+      - ./uidai-dashboard:/app
+      - /app/node_modules
+    command: npm run dev
+    networks:
+      - uidai_network
+    depends_on:
+      - backend
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+networks:
+  uidai_network:
+    driver: bridge
+
+volumes:
+  redis_data:

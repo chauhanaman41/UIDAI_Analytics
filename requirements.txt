@@ -1,0 +1,11 @@
+celery
+pandas
+psycopg2-binary
+python-dotenv
+pyarrow
+scipy
+sqlalchemy
+pmdarima
+prophet
+scikit-learn
+joblib

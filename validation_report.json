@@ -1,0 +1,17 @@
+{
+    "biometric": {
+        "total_rows": 1861108,
+        "valid_rows": 1861108,
+        "errors": {}
+    },
+    "demographic": {
+        "total_rows": 2071700,
+        "valid_rows": 2071700,
+        "errors": {}
+    },
+    "enrollment": {
+        "total_rows": 1006029,
+        "valid_rows": 1006029,
+        "errors": {}
+    }
+}
